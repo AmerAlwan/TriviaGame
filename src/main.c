@@ -8,7 +8,7 @@
 // To run a particular example, you should remove the comment (//) in
 // front of exactly ONE of the following lines:
 
-#define BUTTON_BLINK
+//#define BUTTON_BLINK
 // #define LIGHT_SCHEDULER
 // #define TIME_RAND
 // #define KEYPAD
@@ -41,6 +41,10 @@ int main(void)
 
     InitializePin(GPIOA, GPIO_PIN_5, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // on-board LED
 
+       
+        
+ 
+
     // note: the on-board pushbutton is fine with the default values (no internal pull-up resistor
     // is required, since there's one on the board)
 
@@ -62,8 +66,11 @@ int main(void)
 
     while (1) // loop forever, blinking the LED
     {
+       // char buff[100];
+        //sprintf(buff, "something to print");
+       // SerialPuts("something to print"); 
         HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-        HAL_Delay(250);  // 250 milliseconds == 1/4 second
+        HAL_Delay(500);  // 250 milliseconds == 1/4 second
     }
 #endif
 
