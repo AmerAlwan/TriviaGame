@@ -25,6 +25,13 @@
 #include <stdlib.h>  // srand() and random() functions
 
 #include "ece198.h"
+#include "trivia_questions.h"
+
+void print_question(int category, int index) {
+     char buff[200];
+     sprintf(buff, "\n%s\n1. %s \t2. %s \n3. %s \t4. %s", get_val(category, index, 0), get_val(category, index, 1), get_val(category, index, 2), get_val(category, index, 3), get_val(category, index, 4));
+     SerialPuts(buff); 
+}
 
 int main(void)
 {
@@ -40,8 +47,6 @@ int main(void)
     // initialize the pins to be input, output, alternate function, etc...
 
     InitializePin(GPIOA, GPIO_PIN_5, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // on-board LED
-
-       
         
  
 
@@ -52,6 +57,19 @@ int main(void)
     // (anything we write to the serial port will appear in the terminal (i.e. serial monitor) in VSCode)
 
     SerialSetup(9600);
+
+    InitializePin(GPIOC, GPIO_PIN_9, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // initialize color LED output pins
+    InitializePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // initialize color LED output pins
+    while (1) {
+        if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9)) {
+        int random_question = get_random_question();
+        int category = decipher_category(random_question);
+        int question = decipher_question(random_question);
+        print_question(category, question);
+       // HAL_Delay(100);
+        }
+        
+    }
 
     // as mentioned above, only one of the following code sections will be used
     // (depending on which of the #define statements at the top of this file has been uncommented)
