@@ -58,17 +58,28 @@ int main(void)
 
     SerialSetup(9600);
 
-    InitializePin(GPIOC, GPIO_PIN_9, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // initialize color LED output pins
+    InitializePin(GPIOA, GPIO_PIN_9, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  
     InitializePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // initialize color LED output pins
-    while (1) {
-        if(HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_9)) {
-        int random_question = get_random_question();
-        int category = decipher_category(random_question);
-        int question = decipher_question(random_question);
-        print_question(category, question);
-       // HAL_Delay(100);
-        }
+    
+    int random_question;
+    int category;
+    int question;
+    while (true) {
         
+       for (int color = 1; color < 8; ++color) {
+            // bottom three bits indicate which of the three LEDs should be on (eight possible combinations)
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, color & 0x01);  // blue  (hex 1 == 0001 binary)
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, color & 0x02);  // green (hex 2 == 0010 binary)
+            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, color & 0x04);  // red   (hex 4 == 0100 binary)
+
+            random_question = get_random_question();
+            category = decipher_category(random_question);
+            question = decipher_question(random_question);
+            print_question(category, question);
+
+            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9));   // wait for button press 
+            while (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9));  // wait for button release
+        }
     }
 
     // as mentioned above, only one of the following code sections will be used
