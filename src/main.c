@@ -23,19 +23,15 @@
 #include <stdbool.h> // booleans, i.e. true and false
 #include <stdio.h>   // sprintf() function
 #include <stdlib.h>  // srand() and random() functions
+#include <time.h>
 
 #include "ece198.h"
 #include "trivia_questions.h"
 
-void print_question(int category, int index) {
-     char buff[200];
-     sprintf(buff, "\n%s\n1. %s \t2. %s \n3. %s \t4. %s", get_val(category, index, 0), get_val(category, index, 1), get_val(category, index, 2), get_val(category, index, 3), get_val(category, index, 4));
-     SerialPuts(buff); 
-}
-
 int main(void)
 {
     HAL_Init(); // initialize the Hardware Abstraction Layer
+    srand(time(0));
 
     // Peripherals (including GPIOs) are disabled by default to save power, so we
     // use the Reset and Clock Control registers to enable the GPIO peripherals that we're using.
@@ -58,28 +54,64 @@ int main(void)
 
     SerialSetup(9600);
 
-    InitializePin(GPIOA, GPIO_PIN_9, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  
+    InitializePin(GPIOA, GPIO_PIN_0, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 6 - Start/Exit
+    InitializePin(GPIOA, GPIO_PIN_1, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 5 - Help/Hint
+    InitializePin(GPIOA, GPIO_PIN_4, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 4 - Answer 4
+    InitializePin(GPIOB, GPIO_PIN_0, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 3 - Answer 3
+    InitializePin(GPIOC, GPIO_PIN_1, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 2 - Answer 2
+    InitializePin(GPIOC, GPIO_PIN_0, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 1 - Answer 1
     InitializePin(GPIOA, GPIO_PIN_5 | GPIO_PIN_6 | GPIO_PIN_7, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // initialize color LED output pins
     
-    int random_question;
+    int num_questions = 10;
+    int rand_questions[num_questions];
     int category;
     int question;
+    int answers;
     while (true) {
+
+        print_main_menu();
+
+        if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))  {   // Check for start button press 
+            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0));  // wait for button release
+           
+         }
+
         
-       for (int color = 1; color < 8; ++color) {
-            // bottom three bits indicate which of the three LEDs should be on (eight possible combinations)
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_5, color & 0x01);  // blue  (hex 1 == 0001 binary)
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, color & 0x02);  // green (hex 2 == 0010 binary)
-            HAL_GPIO_WritePin(GPIOA, GPIO_PIN_7, color & 0x04);  // red   (hex 4 == 0100 binary)
+        //  get_random_questions_with_category(rand_questions, num_questions, 1);
+          
+        //     for(int i = 0; i < num_questions; i++) {
+        //         category = decipher_category(rand_questions[i]);
+        //         question = decipher_question(rand_questions[i]);
+        //         answers = get_shuffled_answers();    
+        //         print_question(category, question, answers);    
+        //     }   
+       
 
-            random_question = get_random_question();
-            category = decipher_category(random_question);
-            question = decipher_question(random_question);
-            print_question(category, question);
+         if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))  {   // check for button 6 press 
+            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0));  // wait for button 6 release
+           
+         }
 
-            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9));   // wait for button press 
-            while (!HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_9));  // wait for button release
-        }
+         if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1))  {   // check for button 5 press 
+            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1));  // wait for button 5 release
+            SerialPuts("\nButton 5 - Help/Hint");
+         }
+         if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4))  {   // wait for button press 
+            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4));  // wait for button release
+            SerialPuts("\nButton 4 - Answer 4");
+         }
+         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0))  {   // wait for button press 
+            while (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0));  // wait for button release
+            SerialPuts("\nButton 3 - Answer 3");
+         }
+         if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1))  {   // wait for button press 
+            while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1));  // wait for button release
+            SerialPuts("\nButton 2 - Answer 2");
+         }
+         if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0))  {   // wait for button press 
+            while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0));  // wait for button release
+            SerialPuts("\nButton 1 - Answer 1");
+         }
     }
 
     // as mentioned above, only one of the following code sections will be used
