@@ -40,6 +40,10 @@ void print_status_page(char * status) {
 // }
 
 char * get_val(int category, int index, int val) {
+    char * empty = "";
+    if(val == 5) {
+        return empty;
+    }
     return questions[category][index][val];
 }
 
@@ -51,7 +55,7 @@ char * get_answer(int category, int index, int ans) {
     if (ans >= 1 && ans <= 4) {
         return get_val(category, index, ans);
     }
-    return NULL;
+    return "";
 }
 
 int get_random_question() {
