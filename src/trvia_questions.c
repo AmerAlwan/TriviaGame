@@ -7,79 +7,7 @@
 #include "ece198.h"
 #include "LiquidCrystal.h"
 
-void display_question(char * question, int page) {
-    clear();
-    display_text(question, page);
-}
 
-void display_answers(char * answer, int page) {
-    clear();
-    display_text(answer, page);
-}
-
-void display_main_menu() {
-    clear();
-    setCursor(3,0);
-    print("Who Wants to be");
-    setCursor(3,1);
-    print("a Millionaire?");
-    setCursor(5,2);
-    print("Play (B-6)");
-    setCursor(5,3);
-    print("Help (B-5)");
-}
-
-void display_help_page() {
-    clear();
-    setCursor(0,0);
-    print("B 1-4: Select Answer");
-    setCursor(0,1);
-    print("B 6: Next/Play/Exit");
-    setCursor(0,2);
-    print("B 5: Prev/Help/Hint");
-    setCursor(0,3);
-    print("B 5/6 to go Back");
-}
-
-void display_categories_page() {
-    clear();
-    setCursor(0,0);
-    print("Choose a Category: ");
-    setCursor(0,1);
-    print("1.Random 2.Computer");
-    setCursor(0,2);
-    print("3.Film 4.Video Games");
-}
-
-void display_status_page(char * status) {
-    clear();
-    display_text(status, 1);
-}
-
-void display_text(char * text, int page) {
-    int curr_row = 0;
-    int curr_cursor_index = 0;
-    int curr_page = 1;
-    for(int i = 0; i < strlen(text); ++i) {
-        if(curr_cursor_index == 0 && text[i] == ' ') {
-            curr_cursor_index = -1;
-        }
-        if (text[i] == '|') {
-            ++curr_row;
-            curr_cursor_index = 0;
-        } else if (text[i] == '>') {
-            ++curr_page;
-            curr_row = 0;
-            curr_cursor_index = 0;
-        } else if(page == curr_page) {
-            setCursor(curr_cursor_index, curr_row);
-            char curr_char_to_print[100];
-            sprintf(curr_char_to_print, "%c", text[i]);
-            print(curr_char_to_print);
-            ++curr_cursor_index;
-        }
-    }
-}
 
 /**
  * @brief Get the number of words in the inputted string
