@@ -7,8 +7,86 @@
 #include "ece198.h"
 #include "LiquidCrystal.h"
 
+void display_question(char * question, int page) {
+    clear();
+    display_text(question, page);
+}
 
+void display_answers(char * answer, int page) {
+    clear();
+    display_text(answer, page);
+}
 
+void display_main_menu() {
+    clear();
+    setCursor(3,0);
+    print("Who Wants to be");
+    setCursor(3,1);
+    print("a Millionaire?");
+    setCursor(5,2);
+    print("Play (B-6)");
+    setCursor(5,3);
+    print("Help (B-5)");
+}
+
+void display_help_page() {
+    clear();
+    setCursor(0,0);
+    print("B 1-4: Select Answer");
+    setCursor(0,1);
+    print("B 6: Next/Play/Exit");
+    setCursor(0,2);
+    print("B 5: Prev/Help/Hint");
+    setCursor(0,3);
+    print("B 5/6 to go Back");
+}
+
+void display_categories_page() {
+    clear();
+    setCursor(0,0);
+    print("Choose a Category: ");
+    setCursor(0,1);
+    print("1.Random 2.Computer");
+    setCursor(0,2);
+    print("3.Film 4.Video Games");
+}
+
+void display_status_page(char * status) {
+    clear();
+    display_text(status, 1);
+}
+
+void display_text(char * text, int page) {
+    int curr_row = 0;
+    int curr_cursor_index = 0;
+    int curr_page = 1;
+    for(int i = 0; i < strlen(text); ++i) {
+        if(curr_cursor_index == 0 && text[i] == ' ') {
+            curr_cursor_index = -1;
+        }
+        if (text[i] == '|') {
+            ++curr_row;
+            curr_cursor_index = 0;
+        } else if (text[i] == '>') {
+            ++curr_page;
+            curr_row = 0;
+            curr_cursor_index = 0;
+        } else if(page == curr_page) {
+            setCursor(curr_cursor_index, curr_row);
+            char curr_char_to_print[100];
+            sprintf(curr_char_to_print, "%c", text[i]);
+            print(curr_char_to_print);
+            ++curr_cursor_index;
+        }
+    }
+}
+
+/**
+ * @brief Get the number of words in the inputted string
+ * 
+ * @param text the pointer to the char array (aka string)
+ * @return int 
+ */
 int get_num_words(char * text) {
     int num_words = 0;
     bool isWord = true;
@@ -23,6 +101,12 @@ int get_num_words(char * text) {
     return num_words;
 }
 
+/**
+ * @brief Calculate the length of each word in text and store the lengths in word_lengths
+ * 
+ * @param text the text of which the length of each words is to be calculated from
+ * @param word_lengths the array in which the length of each word is to be stored respectively
+ */
 void get_word_lengths(char * text, int * word_lengths) {
     int curr_word_length = 0;
     int word_lengths_index = 0;
@@ -37,6 +121,13 @@ void get_word_lengths(char * text, int * word_lengths) {
     }
 }
 
+/**
+ * @brief Word Wrap function. Given a string, it 1. Calculates where words exceed the lcd screen's character limit and 
+ * places a '|' to indicate moving to a new row and 2. Calculates when the total rows exceed the lcd screen's row limit 
+ * and places a '>' to indicate moving to a new page
+ * 
+ * @param text the text to be encrypted 
+ */
 void encrypt_text(char * text) {
     int num_words = get_num_words(text);
     int word_lengths[num_words];
@@ -70,6 +161,12 @@ void encrypt_text(char * text) {
     }
 }
 
+/**
+ * @brief Gets the total number of rows that an inputted string text will require
+ * 
+ * @param text 
+ * @return int 
+ */
 int get_num_rows(char * text) {
     int row_num = 1;
     for(int i = 0; i < strlen(text); ++i) {
@@ -80,6 +177,12 @@ int get_num_rows(char * text) {
     return row_num;
 }
 
+/**
+ * @brief Gets the total number of pages that an inputted string text will require
+ * 
+ * @param text 
+ * @return int 
+ */
 int get_num_pages(char * text) {
     int pages_num = 1;
     for(int i = 0; i < strlen(text); ++i) {
@@ -90,10 +193,14 @@ int get_num_pages(char * text) {
     return pages_num;
 }
 
-char * get_questions() {
-    return questions;
-}
-
+/**
+ * @brief Get the value in the 3rd dimension of the questions 3D array
+ * 
+ * @param category the category index
+ * @param index the question index within that category
+ * @param val the value within the question --> 0 for the question itself, 1 for the correct answer, 2-4 for wrong answer
+ * @return char* 
+ */
 char * get_val(int category, int index, int val) {
     char * empty = "";
     if(val == 5) {
@@ -102,10 +209,25 @@ char * get_val(int category, int index, int val) {
     return questions[category][index][val];
 }
 
+/**
+ * @brief Get a question from the questions array
+ * 
+ * @param category the category index
+ * @param index the question index within that category
+ * @return char* 
+ */
 char * get_question(int category, int index) {
     return get_val(category, index, 0);
 }
 
+/**
+ * @brief Get an answer to a question from the questions array
+ * 
+ * @param category the category index
+ * @param index  the question index within that category
+ * @param ans the index of the desired answer of that question
+ * @return char* 
+ */
 char * get_answer(int category, int index, int ans) {
     if (ans >= 1 && ans <= 4) {
         return get_val(category, index, ans);
@@ -113,12 +235,13 @@ char * get_answer(int category, int index, int ans) {
     return "";
 }
 
-int get_random_question() {
-    int rand_category = get_random_number(num_of_categories);
-    int rand_question = get_random_number(questions_per_category);
-    return (rand_question * 10) + rand_category;
-}
-
+/**
+ * @brief Get num_questions of random questions from the inputted category index and store them in rand_questions
+ * 
+ * @param rand_questions the pointer to the int array in which the random question indexes will be stored into
+ * @param num_questions the number of questions to get
+ * @param category the category of the questions to get
+ */
 void generate_random_questions_with_category(int * rand_questions, int num_questions, int category) {
     int cat_questions[questions_per_category];
     for (int i = 0; i < questions_per_category; i++) {
@@ -143,6 +266,12 @@ void generate_random_questions_with_category(int * rand_questions, int num_quest
     }
 }
 
+/**
+ * @brief Gets num_questions of random questions each from a random category
+ * 
+ * @param rand_questions the pointer to the int array in which the indexes of the questions will be stored into
+ * @param num_questions the number of questions to get
+ */
 void generate_random_questions(int * rand_questions, int num_questions) {
     int category_index[num_of_categories];
     for (int i = 0; i < num_of_categories; i++) {
@@ -176,18 +305,32 @@ void generate_random_questions(int * rand_questions, int num_questions) {
     }
 }
 
-int get_random_question_with_category(int category) {
-    return (get_random_number(10) * 10) + category;
-}
-
+/**
+ * @brief Get the category index from the inputted question indexes number
+ * 
+ * @param question ex: if question = 41, then the question index is 4, and the category index is 1, so 1 is returned
+ * @return int 
+ */
 int decipher_category(int question) {
     return question % 10;
 }
 
+/**
+ * @brief Get the question index from the inputted question indexes number
+ * 
+ * @param question ex: if question = 41, then the question index is 4, and the category index is 1, so 4 is returned
+ * @return int 
+ */
 int decipher_question(int question) {
     return question / 10;
 }
 
+/**
+ * @brief Get the index of the correct answer in an answers number
+ * 
+ * @param answers ex: if the answers number is 2314, the correct answer is 1, so the returned index is 2
+ * @return int 
+ */
 int decipher_correct_answer(int answers) {
     for (int i = 3; i >= 0; i--) {
         if (answers % 10 == 1) {
@@ -198,6 +341,13 @@ int decipher_correct_answer(int answers) {
     return 0;
 }
 
+/**
+ * @brief Get the index of the inputted ans number from the inputted answers number
+ * 
+ * @param answers ex: if answers = 1234 and ans = 3, the index of 3 is 2, so the returned number is 2
+ * @param ans 
+ * @return int 
+ */
 int decipher_answer(int answers, int ans) {
     for (int i = 4; i > 0; i--) {
         if (ans == i) {
@@ -208,6 +358,11 @@ int decipher_answer(int answers, int ans) {
     return 1;
 }
 
+/**
+ * @brief Returns a shuffled number containing the digits: 1, 2, 3, 4. Ex: 1234, 2341, 1324
+ * 
+ * @return int 
+ */
 int get_shuffled_answers() {
     int answers = 0;
     int ans[4] = {1,2,3,4};
@@ -235,18 +390,4 @@ int get_random_number(int to) {
     return rand() % to;
 }
 
-char * get_correct_answer(int category, int index) {
-    return questions[category][index][1];
-}
 
-int get_size_1(char * arr[]) {
-    int size = 0;
-    while(1) {
-        if (arr[size]) {
-            size++;
-        } else {
-            return size;
-        }
-    }
-    return 0;
-}
