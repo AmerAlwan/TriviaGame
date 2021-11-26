@@ -3,16 +3,28 @@
 
 int num_of_categories;
 int questions_per_category;
+int max_col;
+int max_row;
 
-char * questions[][10][5];
+char * questions[][20][5];
 
 char * get_questions();
-void print_question(int category, int index, int answers);
-void print_main_menu();
-void print_help_page();
-void print_categories_page();
-void print_error_page();
-void print_status_page(char * status);
+
+void display_main_menu();
+void display_help_page();
+void display_categories_page();
+void display_status_page(char * status);
+void display_text(char * text, int page);
+void display_question(char * question, int page);
+void display_answers(char * answer, int page);
+
+void encrypt_text(char * text);
+int get_num_words(char * text);
+void get_word_lengths(char * text, int * word_lengths);
+int get_num_rows(char * text);
+int get_num_pages(char * text);
+void display_text(char * text, int page);
+
 char * get_val(int category, int index, int val);
 char * get_question(int category, int index);
 char * get_answer(int category, int index, int ans);

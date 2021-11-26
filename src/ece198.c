@@ -237,14 +237,14 @@ int ReadKeypad() {
 
 struct { GPIO_TypeDef *port; uint32_t pin; }
 segments[] = {
-    { GPIOA, GPIO_PIN_0 },  // A
-    { GPIOA, GPIO_PIN_1 },  // B
-    { GPIOA, GPIO_PIN_4 },  // C
-    { GPIOB, GPIO_PIN_0 },  // D
-    { GPIOC, GPIO_PIN_1 },  // E
-    { GPIOC, GPIO_PIN_0 },  // F
-    { GPIOB, GPIO_PIN_8 },  // G
-    { GPIOB, GPIO_PIN_9 },  // H (also called DP)
+    { GPIOC, GPIO_PIN_8 },  // A
+    { GPIOC, GPIO_PIN_6 },  // B
+    { GPIOC, GPIO_PIN_5 },  // C
+    { GPIOA, GPIO_PIN_12 },  // D
+    { GPIOA, GPIO_PIN_11 },  // E
+    { GPIOB, GPIO_PIN_12 },  // F
+    { GPIOB, GPIO_PIN_2 },  // G
+    { GPIOB, GPIO_PIN_1 },  // H (also called DP)
 };
 
 // for each digit, we have a byte (uint8_t) which stores which segments are on and off
@@ -262,8 +262,9 @@ void Display7Segment(int digit) {
         value = digitmap[digit];   // convert digit to a byte which specifies which segments are on
     //value = ~value;   // uncomment this line for common-anode displays
     // go through the segments, turning them on or off depending on the corresponding bit
-    for (int i = 0; i < 8; ++i)
+    for (int i = 0; i < 8; ++i) {
         HAL_GPIO_WritePin(segments[i].port, segments[i].pin, (value >> i) & 0x01);  // move bit into bottom position and isolate it
+    }
 }
 
 /////////

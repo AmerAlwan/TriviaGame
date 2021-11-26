@@ -27,6 +27,7 @@
 
 #include "ece198.h"
 #include "trivia_questions.h"
+#include "LiquidCrystal.h"
 
 int main(void)
 {
@@ -59,16 +60,26 @@ int main(void)
     GPIO_TypeDef * button_4_gpio = GPIOA;
     GPIO_TypeDef * button_5_gpio = GPIOA;
     GPIO_TypeDef * button_6_gpio = GPIOA;
-    GPIO_TypeDef * led_gpio = GPIOB;
+    GPIO_TypeDef * led_gpio = GPIOA;
     uint16_t button_1_gpio_pin = GPIO_PIN_0;
     uint16_t button_2_gpio_pin = GPIO_PIN_1;
     uint16_t button_3_gpio_pin = GPIO_PIN_0;
     uint16_t button_4_gpio_pin = GPIO_PIN_4;
     uint16_t button_5_gpio_pin = GPIO_PIN_1;
     uint16_t button_6_gpio_pin = GPIO_PIN_0;
-    uint16_t led_r_gpio_pin = GPIO_PIN_4;
-    uint16_t led_g_gpio_pin = GPIO_PIN_5;
-    uint16_t led_b_gpio_pin = GPIO_PIN_3;
+    uint16_t led_r_gpio_pin = GPIO_PIN_5;
+    uint16_t led_g_gpio_pin = GPIO_PIN_6;
+    uint16_t led_b_gpio_pin = GPIO_PIN_7;
+
+    // LCD Port and Pins
+    GPIO_TypeDef * lcd_gpio_port = GPIOA;
+    uint16_t lcd_rs_gpio_pin = GPIO_PIN_2;
+    uint16_t lcd_rw_gpio_pin = GPIO_PIN_3;
+    uint16_t lcd_e_gpio_pin = GPIO_PIN_5;
+    uint16_t lcd_d0_gpio_pin = GPIO_PIN_6;
+    uint16_t lcd_d1_gpio_pin = GPIO_PIN_7;
+    uint16_t lcd_d2_gpio_pin = GPIO_PIN_8;
+    uint16_t lcd_d3_gpio_pin = GPIO_PIN_9;
 
     InitializePin(button_6_gpio, button_6_gpio_pin, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 6 - Start/Exit
     InitializePin(button_5_gpio, button_5_gpio_pin, GPIO_MODE_INPUT, GPIO_PULLUP, 0);  // Button 5 - Help/Hint
@@ -79,7 +90,7 @@ int main(void)
     InitializePin(led_gpio, led_r_gpio_pin | led_g_gpio_pin | led_b_gpio_pin, GPIO_MODE_OUTPUT_PP, GPIO_NOPULL, 0);  // initialize color LED output pins
     
     int num_questions = 10;
-    int timer_limit = 5000;
+    int timer_limit = 9000;
     int rand_questions[num_questions];
     int chosen_category;
     int category;
@@ -87,26 +98,51 @@ int main(void)
     int answers;
     int points;
     bool restart;
+    bool debug_mode;
+
+
+
+    // initialize the library by associating any needed LCD interface pin
+//	LiquidCrystal(lcd_gpio_port, lcd_rs_gpio_pin, lcd_rw_gpio_pin, lcd_e_gpio_pin, lcd_d0_gpio_pin, lcd_d1_gpio_pin, lcd_d2_gpio_pin, lcd_d3_gpio_pin);
+    LiquidCrystal(GPIOB, GPIO_PIN_8, GPIO_PIN_9, GPIO_PIN_10, GPIO_PIN_3, GPIO_PIN_4, GPIO_PIN_5, GPIO_PIN_6);
+    Initialize7Segment();
+
     while (true) {
 
         restart = false;
         points = 0;
+        debug_mode = false;
 
-        print_main_menu();
+        display_main_menu();
+        //print_main_menu();
+        Display7Segment(-1);
 
         while(!restart) {
+                // Debug Mode
+                if (HAL_GPIO_ReadPin(button_1_gpio, button_1_gpio_pin)) {
+                    while(HAL_GPIO_ReadPin(button_1_gpio, button_1_gpio_pin)) {
+                        if(HAL_GPIO_ReadPin(button_2_gpio, button_2_gpio_pin)) {
+                            debug_mode = true;
+                            HAL_GPIO_WritePin(led_gpio, led_b_gpio_pin, 0x01);  // blue  (hex 1 == 0001 binary)
+                            HAL_Delay(500);
+                            HAL_GPIO_WritePin(led_gpio, led_b_gpio_pin, 0x00);  // turn blue LED Off
+                            while(HAL_GPIO_ReadPin(button_2_gpio, button_2_gpio_pin));
+                        }
+                    }
+                }
                 // Start Game
                 if (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin))  {   // Check for button 6 press 
-                    while (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin));  // wait for button 6 release
                         // Generate random seed
                         srand(HAL_GetTick());
-                        print_categories_page();
+                        //print_categories_page();
+                        display_categories_page();
                         chosen_category = -1;
+                        while (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin));  // wait for button 6 release
                         // Wait for user to choose category
                         while(true) {
                             // Go back if they press button 6
-                            if (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin))  {   // Check for button 6 press 
-                                while (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin));  // wait for button 6 release
+                            if (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin) || HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin))  {   // Check for button 5 or 6 press 
+                                while (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin) || HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin));  // wait for button 5 or 6 release
                                 SerialPuts("\nRestart");
                                 restart = true;
                                 break;
@@ -145,42 +181,112 @@ int main(void)
 
                         if(rand_questions) {
                             for (int i = 0; i < num_questions; ++i) {
+                                Display7Segment(9);
                                 int chosen_answer = -1;
                                 int timer = timer_limit;
+                                int next_timer_limit = timer - 1000;
                                 char timer_buff[100];
                                 bool hint_used = false;
+                                int page = 1;
+                                int max_pages;
 
                                 category = decipher_category(rand_questions[i]);
                                 question = decipher_question(rand_questions[i]);
                                 answers = get_shuffled_answers();
-                                print_question(category, question, answers);
 
-                                char points_buff[100];
-                                sprintf(points_buff, "\nCurrent Points: %i/%i\n", points, num_questions);
-                                SerialPuts(points_buff);
+                                char text_question[500];
+                                sprintf(text_question, "%i - %s > 1. %s | 2. %s | 3. %s | 4. %s", (i+1), get_question(category, question),  get_answer(category, question, decipher_answer(answers, 1)), get_answer(category, question, decipher_answer(answers, 2)),get_answer(category, question, decipher_answer(answers, 3)),get_answer(category, question, decipher_answer(answers, 4)));
+                                encrypt_text(text_question);
+
+                                // char text_answers[500];
+                                // sprintf(text_answers, "",);
+                                // encrypt_text(text_answers);
+
+                                max_pages = get_num_pages(text_question);
+
+                                // char gotten_question[500];
+                                // sprintf(gotten_question, "%i - %s", (i+1), get_question(category, question));
+                                //max_pages = get_num_pages(gotten_question) + 1;
+
+                             //   encrypt_text(gotten_question);
+                                
+
+                                // char buff[100];
+                                // sprintf(buff, "\nMax Pages = %i, Max Rows = %i", max_pages, get_max_rows(get_question(category, question)));
+                                // SerialPuts(buff);
+
+                              //  print_question(category, question, answers);
+                                display_question(text_question, 1);
+
+
+                                // char points_buff[100];
+                                // sprintf(points_buff, "\nCurrent Points: %i/%i\n", points, num_questions);
+                                // SerialPuts(points_buff);
 
                                 while(timer > 0) {
                                     // Go back to main menu
                                     if (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin))  {   // check for button 6 press 
-                                        while (HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin));  // wait for button 6 release
-                                        restart = true;
-                                        break;
+                                        int counter = 0;
+                                        while (counter <= 1000 && HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin)) {  // wait for button 6 release
+                                            counter++;
+                                            HAL_Delay(1);
+                                        }
+                                        timer -= counter;
+                                        if (counter >= 1000) {
+                                            restart = true;
+                                            break;
+                                        } else {
+                                            page++;
+                                            if (page > max_pages) {
+                                                page = 1;
+                                            }
+                                            display_question(text_question, page);
+                                            // if (page == max_pages) {
+                                            //     display_answers(text_answers, page);
+                                            // } else {
+                                            //     display_question(text_question, page);
+                                            // }
+                                        }
                                     }
 
                                     // Remove two answers for hint
-                                    if (!hint_used && HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin))  {   // check for button 6 press 
-                                        while (HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin));  // wait for button 6 release
-                                        int first_number = get_random_number(3) + 1;
-                                        if (first_number == 1) {
-                                            // Generates number in format of 1#55 where # is a random number from 2-4
-                                            answers = ((10 + (get_random_number(2) + 2)) * 100) + 55;
-                                        } else {
-                                            // Generates number in format of #155 where # is a random number from 2-4
-                                            answers = (((first_number * 10) + 1) * 100) + 55;
+                                    if (HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin))  {   // check for button 6 press 
+                                        int counter = 0;
+                                        while (counter <= 1000 && HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin)) {  // wait for button 6 release
+                                            counter++;
+                                            HAL_Delay(1);
                                         }
-                                        hint_used = true;
-                                        SerialPuts("\nBefore Print");
-                                        print_question(category, question, answers);
+                                        timer -= counter;
+                                        if(counter >= 1000 && !hint_used) {
+                                            int first_number = get_random_number(3) + 1;
+                                            if(debug_mode) {
+                                                answers = 1555;
+                                            } else if (first_number == 1) {
+                                                // Generates number in format of 1#55 where # is a random number from 2-4
+                                                answers = ((10 + (get_random_number(2) + 2)) * 100) + 55;
+                                            } else {
+                                                // Generates number in format of #155 where # is a random number from 2-4
+                                                answers = (((first_number * 10) + 1) * 100) + 55;
+                                            }
+                                            sprintf(text_question, "%i - %s > 1. %s | 2. %s | 3. %s | 4. %s", (i+1), get_question(category, question),  get_answer(category, question, decipher_answer(answers, 1)), get_answer(category, question, decipher_answer(answers, 2)),get_answer(category, question, decipher_answer(answers, 3)),get_answer(category, question, decipher_answer(answers, 4)));
+                                            encrypt_text(text_question);
+                                            hint_used = true;
+                                            // SerialPuts("\nBefore Print");
+                                            // print_question(category, question, answers);
+                                            display_question(text_question, 1);
+                                            page = 1;
+                                        } else {
+                                            page--;
+                                            if(page <= 0) {
+                                                page = max_pages;
+                                            }
+                                            display_question(text_question, page);
+                                            //  if(page == max_pages) {
+                                            //     display_answers(text_answers, page);
+                                            // } else {
+                                            //     display_question(text_question, page);
+                                            // }
+                                        }
                                     }
 
                                     // Wait for buttons 1-4 press for selecting answer
@@ -206,22 +312,28 @@ int main(void)
                                         break;
                                     }
 
-                                    if(timer % 1000 == 0) {
-                                        sprintf(timer_buff, "\rTime Left: %is", timer / 1000);
-                                        SerialPuts(timer_buff);
+                                    if(timer <= next_timer_limit) {
+                                        next_timer_limit -= 1000;
+                                       // sprintf(timer_buff, "\rTime Left: %is", timer / 1000);
+                                      //  SerialPuts(timer_buff);
+                                        Display7Segment(timer / 1000);
                                     }
                                     timer--;
                                     HAL_Delay(1);
                                 }
 
                                 if(restart) {break;}
-                                char buffs[100];
-                                sprintf(buffs, "\n\nChosen Answer: %i, Correct Answer: %i, Answers: %i", chosen_answer, decipher_correct_answer(answers), answers);
-                                SerialPuts(buffs);
+                                // char buffs[100];
+                                // sprintf(buffs, "\n\nChosen Answer: %i, Correct Answer: %i, Answers: %i", chosen_answer, decipher_correct_answer(answers), answers);
+                                // SerialPuts(buffs);
+                                char status[200];
+                                Display7Segment(-1);
                                 if (chosen_answer == decipher_correct_answer(answers)) {
-                                    print_status_page("Correct");
-                                    int counter = 0;
                                     points++;
+                                    sprintf(status, "Correct!|Your score is %i/%i", points, num_questions);
+                                    display_status_page(status);
+                                    //print_status_page("Correct");
+                                    int counter = 0;
                                     HAL_GPIO_WritePin(led_gpio, led_g_gpio_pin, 0x04);  // LED set to green color
                                     while (counter < 3) {
                                         counter++;
@@ -230,9 +342,12 @@ int main(void)
                                     HAL_GPIO_WritePin(led_gpio, led_g_gpio_pin, 0 & 0x02); // LED set to no color
                                 } else {
                                     if (timer == 0) {
-                                        print_status_page("Time Out!");
+                                        sprintf(status, "Time Out!|Your score is %i/%i", points, num_questions);
+                                        display_status_page(status);
+                                      //  print_status_page("Time Out!");
                                     } else {
-                                        print_status_page("Wrong!");
+                                        sprintf(status, "Wrong!|Your score is %i/%i", points, num_questions);
+                                        display_status_page(status);
                                     }
                                     int counter = 0;
                                     HAL_GPIO_WritePin(led_gpio, led_r_gpio_pin, 0x04); // LED set to red color
@@ -248,11 +363,11 @@ int main(void)
 
                             if(!restart) {
                                 char points_buff[100];
-                                sprintf(points_buff, "\n\nGame Over!\nYour score is %i/%i", points, num_questions);
-                                SerialPuts(points_buff);
+                               // SerialPuts(points_buff);
                                 restart = true;
                                 if(points == num_questions) {
-                                    print_status_page("You Won!");
+                                    sprintf(points_buff, "Game Over!|Your score is %i/%i|Congrats, You Won!|Thanks for playing!", points, num_questions);
+                                    display_status_page(points_buff);
                                     int counter = 0;
                                     while(counter < 30) {
                                         HAL_GPIO_WritePin(led_gpio, led_b_gpio_pin, counter & 0x01);  // blue  (hex 1 == 0001 binary)
@@ -266,7 +381,8 @@ int main(void)
                                     HAL_GPIO_WritePin(led_gpio, led_g_gpio_pin, 0 & 0x00); // LED set to no color
                                     HAL_GPIO_WritePin(led_gpio, led_b_gpio_pin, 0 & 0x00); // LED set to no color
                                 } else {
-                                    print_status_page("You Lost!");
+                                    sprintf(points_buff, "Game Over!|Your score is %i/%i|You Lost :(|Play Again! :D", points, num_questions);
+                                    display_status_page(points_buff);
                                     int counter = 0;
                                     while(counter < 3) {
                                         counter++;
@@ -278,8 +394,9 @@ int main(void)
                 } 
                 // Help Page
                 else if (HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin))  {   // check for button 5 press 
+                    //print_help_page();
+                    display_help_page();
                     while (HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin));  // wait for button 5 release
-                    print_help_page();
                     while(1) {
                     // Back to main menu
                         if (HAL_GPIO_ReadPin(button_5_gpio, button_5_gpio_pin) || HAL_GPIO_ReadPin(button_6_gpio, button_6_gpio_pin))  {   // check for button 5 or 6 press 
@@ -289,43 +406,7 @@ int main(void)
                         }
                     }
                 }
-            }
-        
-        //  get_random_questions_with_category(rand_questions, num_questions, 1);
-          
-        //     for(int i = 0; i < num_questions; i++) {
-        //         category = decipher_category(rand_questions[i]);
-        //         question = decipher_question(rand_questions[i]);
-        //         answers = get_shuffled_answers();    
-        //         print_question(category, question, answers);    
-        //     }   
-       
-
-         if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0))  {   // check for button 6 press 
-            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_0));  // wait for button 6 release
-           
-         }
-
-         if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1))  {   // check for button 5 press 
-            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_1));  // wait for button 5 release
-            SerialPuts("\nButton 5 - Help/Hint");
-         }
-         if (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4))  {   // check for button 4 press 
-            while (HAL_GPIO_ReadPin(GPIOA, GPIO_PIN_4));  // wait for button 4 release
-            SerialPuts("\nButton 4 - Answer 4");
-         }
-         if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0))  {   // check for button 3 press 
-            while (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_0));  // wait for button 3 release
-            SerialPuts("\nButton 3 - Answer 3");
-         }
-         if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1))  {   // check for button 2 press 
-            while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_1));  // wait for button 2 release
-            SerialPuts("\nButton 2 - Answer 2");
-         }
-         if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0))  {   // check for button 1 press 
-            while (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_0));  // wait for button 1 release
-            SerialPuts("\nButton 1 - Answer 1");
-         }
+            } 
     }
 
     // as mentioned above, only one of the following code sections will be used

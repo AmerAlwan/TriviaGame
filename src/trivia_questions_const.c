@@ -1,11 +1,83 @@
 #include "trivia_questions.h"
 
 int num_of_categories = 3;
-int questions_per_category = 10;
+int questions_per_category = 20;
+int max_col = 20;
+int max_row = 4;
 
-char * questions[][10][5] = {
+char * questions[][20][5] = {
     // Computer Category
     {
+        {
+            "According to the International System of Units, how many bytes are in a kilobyte of RAM?",
+            "1000",
+            "512",
+            "1024",
+            "500"
+        },
+        {
+            "The programming language 'Swift' was created to replace what other programming language?",
+            "Objective-C",
+            "C#",
+            "Ruby",
+            "C++"
+        },
+        {
+            "Nvidia's headquarters are based in which Silicon Valley city?",
+            "Santa Clara",
+            "Palo Alto",
+            "Cupertino",
+            "Mountain View"
+        },
+        {
+            "What did the name of the Tor Anonymity Network orignially stand for?",
+            "The Onion Router",
+            "The Only Router",
+            "The Orange Router",
+            "The Ominous Router"
+        },
+        {
+            "On Twitter, what was the original character limit for a Tweet?",
+            "140",
+            "120",
+            "160",
+            "100"
+        },
+        {
+            "When did the online streaming service \"Mixer\" launch?",
+            "2016",
+            "2013",
+            "2009",
+            "2011"
+        },
+        {
+            "What vulnerability ranked #1 on the OWASP Top 10 in 2013?",
+            "Injection",
+            "Broken Authentication",
+            "Cross-Site Scripting",
+            "Insecure Direct Object References"
+        },
+        {
+            "Unix Time is defined as the number of seconds that have elapsed since when?",
+            "Midnight, January 1, 1970",
+            "Midnight, July 4, 1976",
+            "Midnight on the creator of Unix's birthday",
+            "Midnight, July 4, 1980"
+        },
+        {
+            "Which of these Cherry MX mechanical keyboard switches is both tactile and clicky?",
+            "Cherry MX Blue",
+            "Cherry MX Black",
+            "Cherry MX Red",
+            "Cherry MX Brown"
+        },
+        {
+            "The series of the Intel HD graphics generation succeeding that of the 5000 and 6000 series (Broadwell) is called:",
+            "HD Graphics 500",
+            "HD Graphics 700",
+            "HD Graphics 600",
+            "HD Graphics 7000"
+        },
         {
             "What does GHz stand for?",
             "Gigahertz",
@@ -44,7 +116,7 @@ char * questions[][10][5] = {
         {
             "What does 'LCD' stand for?",
             "Liquid Crystal Display",
-            "Language Control Desgin",
+            "Language Control Design",
             "Last Common Difference",
             "Long Continuous Design"
         },
@@ -70,7 +142,7 @@ char * questions[][10][5] = {
             "Routine Inspection Protocol"
         },
         {
-            "How many bits make up the significand portion of a single precision floating point number?",
+            "How many bits make up the significant portion of a single precision floating point number?",
             "23",
             "8",
             "53",
@@ -79,6 +151,76 @@ char * questions[][10][5] = {
     },
     // Film Category
     {
+        {
+            "This movie contains the quote, \"Nobody puts Baby in a corner.\"",
+            "Dirty Dancing",
+            "Three Men and a Baby",
+            "Ferris Bueller's Day Off",
+            "PRetty in Pink"
+        },
+        {
+            "This movie contains the quote, \"What we've got here is a failure to communicate\"",
+            "Cool Hand Luke",
+            "Bonnie and Clyde",
+            "The Graduate",
+            "In the Heat of the Night"
+        },
+        {
+            "What was the name of the planet in \"Aliens\"?",
+            "LV-426",
+            "Weyland Yitani Corporation Base",
+            "FR-838",
+            "DI-621"
+        },
+        {
+            "Who plays the Nemesis in the Resident Evil movies?",
+            "Matthew Taylor",
+            "Jason Dip",
+            "Eric Mabius",
+            "Jimmy Matts"
+        },
+        {
+            "This trope refers to minor characters that are killed off to show how a monster works.",
+            "Red Shirt",
+            "Minions",
+            "Expendables",
+            "Cannon Fodder"
+        },
+        {
+            "What year did the James Cameron film \"Titanic\" come out in theaters?",
+            "1997",
+            "1996",
+            "1998",
+            "1999"
+        },
+        {
+            "What was Bruce Campbell's iconic one-liner after getting a chainsaw hand in Evil Dead 2?",
+            "Groovy",
+            "Gnarly",
+            "Perfect",
+            "Nice"
+        },
+        {
+            "Ed Koch, the Mayor of New York in 1984, played himself in which Muppets movie?",
+            "The Muppets Take Manhattan",
+            "The Great Muppet Caper",
+            "The Muppet Christmas Carol",
+            "The Mupper Movie"
+        },
+        {
+            "In the 2014 film \"Birdman\", what is the primary instrument in the score?",
+            "Drums",
+            "Saxophone",
+            "Violin",
+            "Actual Live Birds Singing"
+        },
+        {
+            "What is the birth name of Michael Caine?",
+            "Maurice Micklewhite",
+            "Morris Coleman",
+            "Carl Myers",
+            "Martin Michaels"
+        },
         {
             "Daniel Radcliffe became a global star in the film industry due to his performance in which film franchise?",
             "Harry Potter",
@@ -153,6 +295,76 @@ char * questions[][10][5] = {
     {
         // Video Games Category
         {
+            "When was the original Star Wars: Battlefront II released?",
+            "October 31, 2005",
+            "December 18, 2004",
+            "November 21, 2006",
+            "September 9, 2007"
+        },
+        {
+            "Who is the villain company in \"Stardew Valley\"?",
+            "Joja Co",
+            "Ronin",
+            "Empire",
+            "Robotnik Industry's"
+        },
+        {
+            "Which student in Yandere Simulator is known for asking irritating and stupid questions?",
+            "Midori Gurin",
+            "Kokona Hruka",
+            "Oka Ruto",
+            "Pipi Osu"
+        },
+        {
+            "In Forza Motorsport 6, which of these track-exclusive cars was NOT featured in the game, either originally with the game or added as DLC?",
+            "Aston Martin Vulcan",
+            "Ferrari FXX-K",
+            "McLaren P1 GTR",
+            "Lotus E23"
+        },
+        {
+            "Which one of the following actors did not voice a character in \"Saints Row: The Third\"?",
+            "Ron Jeremy",
+            "Sasha Grey",
+            "Burt Reynolds",
+            "Hulk Hogan"
+        },
+        {
+            "Which of these Starbound races has a Wild West culture?",
+            "Novakid",
+            "Avian",
+            "Human",
+            "Hylotl"
+        },
+        {
+            "What is the item required to summon the boss Duke Fishron in the game Terraria?",
+            "Truffle Worm",
+            "Suspicious Looking Fish",
+            "King Grasshopper",
+            "Slug"
+        },
+        {
+            "Which town was Seamus \"Sledge\" Cowden from \"Tom Clancy's Rainbow Six Siege\" born in?",
+            "John 'Groats",
+            "Brawl",
+            "Kearvaig",
+            "Talmine"
+        },
+        {
+            "In \"Resident Evil 2\", what is Leon Kennedy's middle name",
+            "Scott",
+            "Shaun",
+            "Simon",
+            "Sam"
+        },
+        {
+            "In which game did the character \"Mario\" make his first appearance?",
+            "Donkey Kong",
+            "Super Mario Bros.",
+            "Super Mario Land",
+            "Mario Bros."
+        },
+        {
             "Who is the protagonist in the game \"The Walking Dead: Season One\"?",
             "Lee Everett",
             "Clementine",
@@ -206,7 +418,7 @@ char * questions[][10][5] = {
             "12",
             "6",
             "36",
-            "12"
+            "15"
         },
         {
             "What are the names of the Ice Climbers in the video game Ice Climber?",

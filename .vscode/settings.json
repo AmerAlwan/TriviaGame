@@ -1,7 +1,8 @@
 {
     "files.associations": {
         "time.h": "c",
-        "trivia_questions.h": "c"
+        "trivia_questions.h": "c",
+        "liquidcrystal.h": "c"
     },
     "cmake.configureOnOpen": false
 }

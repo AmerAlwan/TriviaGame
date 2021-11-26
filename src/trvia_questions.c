@@ -3,41 +3,96 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
+#include <string.h>
 #include "ece198.h"
+#include "LiquidCrystal.h"
 
-void print_question(int category, int index, int answers) {
-    char buff[500];
-    sprintf(buff, "\n\n%i.%i - %s\n1. %s \t2. %s \n3. %s \t4. %s", (category + 1), (index + 1), get_question(category, index), get_answer(category, index, decipher_answer(answers, 1)), get_answer(category, index, decipher_answer(answers, 2)), get_answer(category, index, decipher_answer(answers, 3)), get_answer(category, index, decipher_answer(answers, 4)));
-    SerialPuts(buff); 
+
+
+int get_num_words(char * text) {
+    int num_words = 0;
+    bool isWord = true;
+    for (int i = 0; i < strlen(text); i++) {
+        if(text[i] == ' ') {
+            isWord = true;
+        } else if(isWord) {
+            isWord = false;
+            ++num_words;
+        }
+    }
+    return num_words;
 }
 
-void print_main_menu(){
-    SerialPuts("\n\n\tWho Wants to be a Millionaire?\n\t\tPlay\n\t\tHelp");
+void get_word_lengths(char * text, int * word_lengths) {
+    int curr_word_length = 0;
+    int word_lengths_index = 0;
+    for(int i = 0; i < strlen(text); i++) {
+        if(text[i] == ' ' || i == strlen(text) - 1) {
+            word_lengths[word_lengths_index] = curr_word_length;
+            curr_word_length = 0;
+            ++word_lengths_index;
+        } else {
+            ++curr_word_length;
+        }
+    }
 }
 
-void print_help_page() {
-    SerialPuts("\n\nButton 1-4: Answer\nButton 5: Play in Main Menu, Exit in Question Page\nButton 6: Help in Main Menu, Hint in Question page\nAnswer 15 questions correctly to win. Answer any question incorrectly and you lost!\nGood Luck!");
+void encrypt_text(char * text) {
+    int num_words = get_num_words(text);
+    int word_lengths[num_words];
+    get_word_lengths(text, word_lengths);
+    int curr_sentence_length = 0;
+    int index = 0;
+    int curr_row = 0;
+
+    for(int i = 0; i < num_words; ++i) {
+        if (text[index] == '|') {
+            ++curr_row;
+            curr_sentence_length = 0;
+        } else if (text[index] == '>') {
+            curr_row = 0;
+            curr_sentence_length = 0;
+        } else if (curr_sentence_length + word_lengths[i] > max_col) {
+            text[index - 1] = '|';
+            ++curr_row;
+            curr_sentence_length = 0;
+        }
+        if(curr_row == 4) {
+            if(text[index] == '|') {
+                text[index] = '>';
+            } else {
+                text[index - 1] = '>';
+            }
+            curr_row = 0;
+        }
+        curr_sentence_length += word_lengths[i] + 1;
+        index += word_lengths[i] + 1;
+    }
 }
 
-void print_categories_page(){
-    SerialPuts("\n\nChooose a Category: \n1. Random\t2. Computer\n3. Film\t4. Video Games");
+int get_num_rows(char * text) {
+    int row_num = 1;
+    for(int i = 0; i < strlen(text); ++i) {
+        if (text[i] == '|' || text[i] == '>') {
+            ++row_num;
+        }
+    }
+    return row_num;
 }
 
-void print_error_page(char * error) {
-    char buff[200];
-    sprintf(buff, "\n\n%s", error);
-    SerialPuts(buff);
+int get_num_pages(char * text) {
+    int pages_num = 1;
+    for(int i = 0; i < strlen(text); ++i) {
+        if(text[i] == '>') {
+            ++pages_num;
+        }
+    }
+    return pages_num;
 }
 
-void print_status_page(char * status) {
-    char buff[200];
-    sprintf(buff, "\n\n%s", status);
-    SerialPuts(buff);
+char * get_questions() {
+    return questions;
 }
-
-// char * get_questions() {
-//     return questions;
-// }
 
 char * get_val(int category, int index, int val) {
     char * empty = "";
@@ -172,37 +227,9 @@ int get_shuffled_answers() {
         answers += ans[i];
     }
 
-    // char buffs[100];
-    // sprintf(buffs, "\n%i", answers);
-    // SerialPuts(buffs);
-
     return answers; 
 
 }
-
-// char * get_shuffled_answers(int category, int index) {
-//     char * answers[4];
-//     int i = get_random_number(4);
-//     answers[0] = questions[category][index][i];
-//     if(i == 0) {
-//         answers[1] = questions[category][index][1];
-//         answers[2] = questions[category][index][2];
-//         answers[3] = questions[category][index][3];
-//     } else if(i == 1) {
-//         answers[1] = questions[category][index][0];
-//         answers[2] = questions[category][index][2];
-//         answers[3] = questions[category][index][3];
-//     } else if(i == 2) {
-//         answers[1] = questions[category][index][0];
-//         answers[2] = questions[category][index][1];
-//         answers[3] = questions[category][index][3];
-//     } else if(i == 3) {
-//         answers[1] = questions[category][index][0];
-//         answers[2] = questions[category][index][1];
-//         answers[3] = questions[category][index][2];
-//     }
-//     return &answers[0];
-// }
 
 int get_random_number(int to) {
     return rand() % to;
@@ -211,18 +238,6 @@ int get_random_number(int to) {
 char * get_correct_answer(int category, int index) {
     return questions[category][index][1];
 }
-// char * get_wrong_answers(int category, int index) {
-//     char * answers[3] = {questions[category][index][2], questions[category][index][3], questions[category][index][4]};
-//     return answers;
-// }
-// char * get_answers(int category, int index) {
-//     char * answers[4] = {questions[category][index][1], questions[category][index][2], questions[category][index][3], questions[category][index][4]};
-//     return answers;
-// }
-
-// char * get_answer(int category, int index, int ans) {
-//     return questions[category][index][ans];
-// }
 
 int get_size_1(char * arr[]) {
     int size = 0;
